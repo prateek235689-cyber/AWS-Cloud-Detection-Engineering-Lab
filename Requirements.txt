@@ -1,0 +1,3 @@
+# AWS Cloud Detection Engineering Lab
+# Uses Python standard-library modules only.
+# No external packages are required at this stage.
