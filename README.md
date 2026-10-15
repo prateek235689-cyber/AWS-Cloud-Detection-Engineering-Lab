@@ -1,51 +1,46 @@
 # AWS Cloud Detection Engineering Lab
 
-## Overview:
-This project demonstrates a practical cloud detection engineering and incident investigation workflow using Amazon Web Services (AWS).
-The lab focuses on analyzing AWS CloudTrail management events, developing detection logic for suspicious activity, validating detections against test events, and documenting safe incident response procedures.
+A hands-on cybersecurity project focused on developing and testing Python-based detection rules for AWS CloudTrail events.
+
+## Project Overview:
+This lab demonstrates how cloud audit events can be analyzed to identify potentially suspicious authentication activity and IAM policy modifications. It combines Python detection logic, CloudTrail-style JSON event samples, automated unit tests, and investigation documentation.
 
 ## Objectives:
-- Understand AWS CloudTrail event records.
-- Develop detection logic for selected suspicious AWS API activities.
-- Build repeatable test cases with documented expected outcomes.
-- Investigate event evidence and construct incident timelines.
-- Design least-privilege and controlled response workflows.
-- Document findings, limitations, and remediation recommendations.
+- Develop custom detection logic for selected AWS security events.
+- Analyze CloudTrail event fields using Python.
+- Validate detection behavior through positive and negative test cases.
+- Document investigation steps, findings, and detection limitations.
+- Build practical cloud detection engineering skills.
 
-## Planned Technology Stack:
+## Detection Rules:
+- **AWS-LOGIN-001:** Detects repeated failed AWS console sign-in attempts from the same source IP within a five-minute window.
+- **AWS-IAM-002:** Identifies selected IAM policy modification events for further investigation.
+
+## Technologies
+- Python
 - AWS CloudTrail
-- Python for event parsing and detection logic
-- JSON-based event fixtures and test cases
-- Amazon EventBridge and AWS Lambda for optional response automation
-- Git and GitHub for version control and documentation
+- JSON
+- Python `unittest`
+- AWS Management Console
 
-Services will be enabled only after checking availability, permissions, and potential charges.
+## Validation Status:
+The current automated test suite contains **5 passing tests** across the two detection rules.
+The positive detection scenarios use synthetic CloudTrail-style events. A sanitized real OAuth authorization event is included as a negative test. Live validation against matching real failed sign-in and IAM policy modification events remains outstanding.
 
-## Project Methodology:
-1. Review the lab scope and cost controls.
-2. Inspect available CloudTrail management events.
-3. Define detection use cases and expected outcomes.
-4. Implement and test detection logic using sample events.
-5. Investigate findings and document evidence.
-6. Design a controlled response workflow.
-7. Validate results and publish the final report.
+## Repository Contents:
+- `Src/` — Python detection implementations.
+- `Sample_events/` — Synthetic event fixtures and a sanitized real event.
+- `Tests/` — Automated unit tests.
+- `Detections/` — Detection rule documentation.
+- `Reports/` — Test validation and investigation reports.
+- `Docs/` — Project architecture documentation.
 
-## Repository Structure:
-- `docs/` — architecture, methodology, and cost controls.
-- `detections/` — detection use cases and rules.
-- `sample-events/` — sanitized or synthetic test events.
-- `investigations/` — investigation notes and timelines.
-- `response/` — response workflow and safety controls.
-- `tests/` — detection validation and test cases.
-- `screenshots/` — selected evidence from completed lab activities.
+## Security Notice
+This project is an educational detection engineering lab. It does not automatically block users, change IAM permissions, or remediate AWS resources. Do not publish credentials, unredacted CloudTrail records, account identifiers, or other sensitive information.
 
-## Safety and Cost Considerations:
-This project uses only AWS resources and accounts for which the author has authorization. No real credentials, access keys, account-sensitive information, or confidential logs will be committed.
+## Future Improvements
 
-Potentially billable services will be reviewed before activation. Automated response actions will be tested in a controlled environment before any live remediation is considered.
-
-## Project Status
-
-**Status:** Initial setup
-
-Implementation results, test outcomes, and screenshots will be added as each phase is completed. Planned features are not claimed as deployed or tested until verified.
+- Add additional cloud detection rules.
+- Expand edge-case and malformed-event testing.
+- Improve structured finding output.
+- Validate detection logic against appropriately authorized real CloudTrail events.
