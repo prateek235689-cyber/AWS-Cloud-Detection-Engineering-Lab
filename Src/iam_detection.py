@@ -1,67 +1,61 @@
-"""Detect potentially risky IAM policy changes in CloudTrail-style events."""
 
 import json
+import unittest
 from pathlib import Path
 
-
-def detect_iam_policy_changes(events):
-    """Generate findings for selected IAM policy modification events."""
-
-    suspicious_events = {
-        "PutUserPolicy",
-        "PutRolePolicy",
-        "PutGroupPolicy",
-        "AttachUserPolicy",
-        "AttachRolePolicy",
-        "AttachGroupPolicy",
-        "CreatePolicyVersion",
-        "SetDefaultPolicyVersion",
-    }
-
-    findings = []
-
-    for event in events:
-        if (
-            event.get("eventSource") == "iam.amazonaws.com"
-            and event.get("eventName") in suspicious_events
-        ):
-            findings.append(
-                {
-                    "rule_id": "AWS-IAM-002",
-                    "severity": "MEDIUM",
-                    "title": "IAM policy modification detected",
-                    "event_name": event.get("eventName"),
-                    "actor": event.get("userIdentity", {}).get(
-                        "userName", "Unknown"
-                    ),
-                    "source_ip": event.get("sourceIPAddress", "Unknown"),
-                    "target": event.get("requestParameters", {}),
-                    "event_time": event.get("eventTime", "Unknown"),
-                }
-            )
-
-    return findings
+from src.iam_detection import detect_iam_policy_changes
 
 
-def main():
-    project_root = Path(__file__).resolve().parent.parent
-    event_file = (
-        project_root
-        / "sample_events"
-        / "suspicious_iam_policy_change.json"
-    )
+class TestIAMPolicyChanges(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        project_root = Path(__file__).resolve().parent.parent
+        event_file = (
+            project_root
+            / "sample_events"
+            / "suspicious_iam_policy_change.json"
+        )
 
-    with event_file.open("r", encoding="utf-8") as file:
-        events = json.load(file)
+        with event_file.open("r", encoding="utf-8") as file:
+            cls.sample_events = json.load(file)
 
-    findings = detect_iam_policy_changes(events)
+    def test_iam_policy_change_generates_finding(self):
+        findings = detect_iam_policy_changes(self.sample_events)
 
-    print(f"Events loaded: {len(events)}")
-    print(f"Findings generated: {len(findings)}")
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["rule_id"], "AWS-IAM-002")
+        self.assertEqual(findings[0]["event_name"], "PutUserPolicy")
 
-    for finding in findings:
-        print(json.dumps(finding, indent=2))
+    def test_unrelated_event_does_not_generate_finding(self):
+        unrelated_event = {
+            "eventSource": "ec2.amazonaws.com",
+            "eventName": "DescribeInstances",
+            "eventTime": "2026-10-15T10:20:00Z",
+            "sourceIPAddress": "198.51.100.50",
+            "userIdentity": {
+                "userName": "demo-admin"
+            },
+        }
+
+        findings = detect_iam_policy_changes([unrelated_event])
+
+        self.assertEqual(findings, [])
+
+    def test_sanitized_oauth_event_does_not_generate_finding(self):
+        project_root = Path(__file__).resolve().parent.parent
+        event_file = (
+            project_root
+            / "sample_events"
+            / "real_oauth_event_sanitized.json"
+        )
+
+        with event_file.open("r", encoding="utf-8") as file:
+            oauth_event = json.load(file)
+
+        findings = detect_iam_policy_changes([oauth_event])
+
+        self.assertEqual(findings, [])
 
 
 if __name__ == "__main__":
-    main()
+    unittest.main()
